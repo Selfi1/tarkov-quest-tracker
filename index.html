@@ -30,8 +30,6 @@
     #fileInput { display: none; }
     #searchInput { border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: #18181b; color: #fff; padding: 10px 14px; font-size: 14px; width: 250px; }
     #searchInput::placeholder { color: #a1a1aa; }
-    #searchInput { border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: #18181b; color: #fff; padding: 10px 14px; font-size: 14px; width: 250px; }
-    #searchInput::placeholder { color: #a1a1aa; }
   </style>
 </head>
 <body>
@@ -628,6 +626,22 @@
       const mid = Math.ceil(words.length / 2);
       return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")].join("\n");
     }
+    function computeQuestLevels(quests) {
+      const byId = Object.fromEntries(quests.map((q) => [q.id, q]));
+      const levelMemo = {};
+      function levelFor(id) {
+        if (levelMemo[id] !== undefined) return levelMemo[id];
+        const q = byId[id];
+        if (!q) return 1;
+        const deps = (q.requires || []).filter((dep) => !!byId[dep]);
+        if (deps.length === 0) return levelMemo[id] = 1;
+        const depMax = Math.max(...deps.map(levelFor));
+        return levelMemo[id] = Math.min(70, depMax + 2);
+      }
+      const result = {};
+      quests.forEach((q) => { result[q.id] = levelFor(q.id); });
+      return result;
+    }
     function expandAutoCompletions(sourceId, visited = new Set()) {
       if (visited.has(sourceId)) return [];
       visited.add(sourceId);
@@ -725,6 +739,7 @@
       const edges = document.getElementById("edges");
       const nodes = document.getElementById("nodes");
       const allQuests = FALLBACK_QUESTS_BY_TRADER[state.activeTrader] || [];
+      const levelByQuestId = computeQuestLevels(allQuests);
       const quests = state.searchQuery ? allQuests.filter((q) => q.name.toLowerCase().includes(state.searchQuery.toLowerCase())) : allQuests;
       const layout = buildAutoLayout(quests);
       title.textContent = state.activeTrader;
@@ -789,8 +804,9 @@
         btn.className = "node " + status;
         btn.style.left = pos.x + "px";
         btn.style.top = pos.y + "px";
-        btn.title = quest.name;
-        btn.textContent = fitText(quest.name);
+        const level = levelByQuestId[quest.id] || 1;
+        btn.title = "Lvl " + level + " req - " + quest.name;
+        btn.textContent = fitText("[Lv " + level + "] " + quest.name);
         btn.onclick = (e) => { e.stopPropagation(); toggleQuest(quest); };
         nodes.appendChild(btn);
       });
