@@ -6,39 +6,84 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tarkov Visual Quest Tracker</title>
   <style>
-    :root { color-scheme: dark; }
+    :root {
+      color-scheme: dark;
+      --bg-start: #0b1220;
+      --bg-end: #111827;
+      --panel-bg: rgba(15, 23, 42, 0.9);
+      --panel-border: rgba(148, 163, 184, 0.18);
+      --surface-bg: rgba(15, 23, 42, 0.82);
+      --surface-strong: #0f172a;
+      --text-main: #e5eefc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --completed-border: #22c55e;
+      --completed-bg: rgba(21, 128, 61, 0.38);
+      --completed-text: #f0fdf4;
+      --available-border: #f59e0b;
+      --available-bg: rgba(180, 83, 9, 0.42);
+      --available-text: #ffedd5;
+      --locked-border: #94a3b8;
+      --locked-bg: rgba(51, 65, 85, 0.58);
+      --locked-text: #e5e7eb;
+      --failed-border: #ef4444;
+      --failed-bg: rgba(185, 28, 28, 0.4);
+      --failed-text: #fef2f2;
+      --collector-badge-bg: linear-gradient(135deg, #f5d87a, #b88922);
+      --collector-badge-text: #23160a;
+      --collector-badge-ring: rgba(245, 216, 122, 0.35);
+    }
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, sans-serif; background: #000; color: #fff; }
+    body { margin: 0; font-family: Arial, sans-serif; background: radial-gradient(circle at top, var(--bg-end), var(--bg-start) 55%); color: var(--text-main); }
     .wrap { max-width: 1800px; margin: 0 auto; padding: 16px; }
-    .panel { border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; background: #09090b; box-shadow: 0 20px 40px rgba(0,0,0,0.4); padding: 20px; }
+    .panel { border: 1px solid var(--panel-border); border-radius: 24px; background: var(--panel-bg); box-shadow: 0 20px 40px rgba(2, 6, 23, 0.45); padding: 20px; backdrop-filter: blur(14px); }
     .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
     .spacer { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
-    button, .file-label { border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: #18181b; color: #fff; padding: 10px 14px; cursor: pointer; font-size: 14px; }
+    button, .file-label { border: 1px solid var(--panel-border); border-radius: 12px; background: rgba(15, 23, 42, 0.92); color: var(--text-main); padding: 10px 14px; cursor: pointer; font-size: 14px; appearance: none; -webkit-appearance: none; }
     .badge { border-radius: 12px; padding: 6px 10px; font-size: 14px; }
-    .traders { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin: 14px 0; padding: 12px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.1); background: rgba(24,24,27,0.7); }
-    .trader { border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); padding: 8px; text-align: left; background: #09090b; }
-    .trader.active { border-color: #d946ef; box-shadow: 0 8px 18px rgba(217,70,239,0.2); }
-    .muted { color: #a1a1aa; font-size: 13px; }
+    .traders { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin: 14px 0; padding: 12px; border-radius: 18px; border: 1px solid var(--panel-border); background: var(--surface-bg); }
+    .trader { border-radius: 12px; border: 1px solid var(--panel-border); padding: 8px; text-align: left; background: var(--surface-strong); }
+    .trader.active { border-color: var(--accent); box-shadow: 0 8px 18px rgba(56, 189, 248, 0.18); }
+    .muted { color: var(--text-muted); font-size: 13px; }
     .title { font-size: 28px; margin: 0; }
-    .view { position: relative; height: 70vh; overflow: hidden; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); background: #020817; margin-top: 10px; }
+    .view { position: relative; height: 70vh; overflow: hidden; border-radius: 20px; border: 1px solid var(--panel-border); background: linear-gradient(180deg, rgba(2, 6, 23, 0.9), rgba(15, 23, 42, 0.94)); margin-top: 10px; }
     .canvas { position: absolute; left: 0; top: 0; transform-origin: top left; cursor: grab; }
     .canvas.dragging { cursor: grabbing; }
     .node { position: absolute; width: 180px; min-height: 74px; border-radius: 12px; padding: 10px 12px; text-align: left; white-space: pre-wrap; line-height: 1.2; font-size: 14px; font-weight: 700; user-select: none; }
-    .completed { border: 1px solid #22c55e; background: rgba(22,163,74,0.2); color: #dcfce7; }
-    .available { border: 1px solid #f97316; background: rgba(249,115,22,0.2); color: #ffedd5; }
-    .locked { border: 1px solid #ef4444; background: rgba(185,28,28,0.2); color: #fee2e2; }
+    .node.completed { border-color: var(--completed-border); background-color: var(--completed-bg); color: var(--completed-text); box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.12); }
+    .node.available { border-color: var(--available-border); background-color: var(--available-bg); color: var(--available-text); box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.12); }
+    .node.locked { border-color: var(--locked-border); background-color: var(--locked-bg); color: var(--locked-text); box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08); }
+    .node.failed { border-color: var(--failed-border); background-color: var(--failed-bg); color: var(--failed-text); box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.12); }
+    .node.collector-required::after {
+      content: attr(data-collector-badge);
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: var(--collector-badge-bg);
+      color: var(--collector-badge-text);
+      font-size: 12px;
+      font-weight: 900;
+      box-shadow: 0 0 0 3px var(--collector-badge-ring), 0 8px 18px rgba(0, 0, 0, 0.35);
+    }
     #fileInput { display: none; }
-    #searchInput { border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: #18181b; color: #fff; padding: 10px 14px; font-size: 14px; width: 250px; }
-    #searchInput::placeholder { color: #a1a1aa; }
+    #searchInput { border: 1px solid var(--panel-border); border-radius: 12px; background: rgba(15, 23, 42, 0.92); color: var(--text-main); padding: 10px 14px; font-size: 14px; width: 250px; }
+    #searchInput::placeholder { color: var(--text-muted); }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="panel">
       <div class="row">
-        <span class="badge" style="background:rgba(255,255,255,0.1)">Green = done</span>
-        <span class="badge" style="background:rgba(249,115,22,0.2);color:#fed7aa">Orange = available</span>
-        <span class="badge" style="background:rgba(220,38,38,0.2);color:#fecaca">Red = locked</span>
+        <span class="badge" style="background:var(--completed-bg);color:var(--completed-text)">Green = done</span>
+        <span class="badge" style="background:var(--available-bg);color:var(--available-text)">Amber = available</span>
+        <span class="badge" style="background:var(--locked-bg);color:var(--locked-text)">Gray = locked</span>
+        <span class="badge" style="background:var(--failed-bg);color:var(--failed-text)">Red = failed</span>
+        <span class="badge" style="background:linear-gradient(135deg, rgba(245, 216, 122, 0.2), rgba(184, 137, 34, 0.28)); color:#f5d87a; border:1px solid rgba(245, 216, 122, 0.35)">Gold C = Collector required</span>
         <div class="spacer">
           <button id="zoomIn">+ Zoom In</button>
           <button id="zoomOut">- Zoom Out</button>
@@ -88,28 +133,33 @@
         {"id":"pr-4","name":"BP depot","requires":["pr-3"]},
         {"id":"pr-5","name":"Bad rep evidence","requires":["pr-4"]},
         {"id":"pr-6","name":"Ice cream cones","requires":["pr-5"]},
-        {"id":"pr-7","name":"Postman Pat","requires":["pr-6"]},
-        {"id":"pr-8","name":"Shaking up teller","requires":["pr-6"]},
+        {"id":"pr-7","name":"Postman Pat - Part 1","requires":["pr-6"]},
+        {"id":"pr-8","name":"Shaking Up the Teller","requires":["pr-6"]},
         {"id":"pr-9","name":"Perfect mediator","requires":["pr-8"]},
         {"id":"pr-10","name":"Grenadier","requires":["pr-8"]},
-        {"id":"pr-11","name":"Insomnia","requires":["pr-10"]},
-        {"id":"pr-12","name":"Test drive. Pt. 1","requires":["pr-10"]},
+        {"id":"pr-12","name":"Test Drive - Part 1","requires":["pr-10"]},
+        {"id":"pr-62","name":"Test Drive - Part 2","requires":["pr-12"]},
+        {"id":"pr-63","name":"Test Drive - Part 3","requires":["pr-62"]},
+        {"id":"pr-64","name":"Test Drive - Part 4","requires":["pr-63"]},
+        {"id":"pr-65","name":"Test Drive - Part 5","requires":["pr-64"]},
+        {"id":"pr-66","name":"Test Drive - Part 6","requires":["pr-65"]},
         {"id":"pr-13","name":"The Punisher - Part 1","requires":["pr-8"]},
         {"id":"pr-14","name":"The Punisher - Part 2","requires":["pr-13"]},
         {"id":"pr-15","name":"The Punisher - Part 3","requires":["pr-14"]},
         {"id":"pr-16","name":"The Punisher - Part 4","requires":["pr-15"]},
         {"id":"pr-17","name":"The Punisher - Part 5","requires":["pr-16"]},
         {"id":"pr-18","name":"The Punisher - Part 6","requires":["pr-17"]},
-        {"id":"pr-19","name":"Polikhim hobo","requires":["pr-39"]},
+        {"id":"pr-19","name":"Polikhim hobo","requires":["sk-4"]},
         {"id":"pr-20","name":"Regulated materials","requires":["pr-19"]},
-        {"id":"pr-21","name":"Big customer","requires":["pr-42"]},
+        {"id":"pr-21","name":"Big customer","requires":["sk-9"],"fails":["sk-10","th-11"]},
         {"id":"pr-22","name":"Anesthesia","requires":["pr-8"]},
         {"id":"pr-23","name":"The bunker - Part 1","requires":["pr-4"]},
         {"id":"pr-24","name":"The bunker - Part 2","requires":["pr-23"]},
-        {"id":"pr-25","name":"Search mission","requires":[]},
-        {"id":"pr-26","name":"No offence","requires":["pr-43","pr-24"]},
-        {"id":"pr-27","name":"No Place for Renegades","requires":["pr-6","pr-24"]},
+        {"id":"pr-25","name":"Search mission","requires":["pr-0"]},
+        {"id":"pr-26","name":"No offence","requires":[],"requiresAny":["sk-10","th-11"]},
+          {"id":"pr-27","name":"No Place for Renegades","requires":["pr-24"]},
         {"id":"pr-28","name":"Documents","requires":["pr-27"]},
+        {"id":"mc-91","name":"Special Comms","requires":["pr-28"]},
         {"id":"pr-29","name":"Capturing Outposts","requires":["pr-18"]},
         {"id":"pr-30","name":"Intimidator","requires":["pr-18"]},
         {"id":"pr-31","name":"Escort","requires":["pr-18"]},
@@ -120,28 +170,28 @@
         {"id":"pr-36","name":"Shooting Cans","requires":[]},
         {"id":"pr-37","name":"Luxurious Life","requires":[]},
         {"id":"pr-38","name":"Properties All Around","requires":[]},
-        {"id":"pr-39","name":"Background Check","requires":[]},
-        {"id":"pr-40","name":"Belka and Strelka","requires":["pr-7"]},
+        {"id":"pr-39","name":"Background Check","requires":["pr-37"]},
+        {"id":"pr-40","name":"Belka and Strelka","requires":["pr-4"]},
         {"id":"pr-41","name":"No Questions Asked","requires":["pr-18"]},
         {"id":"pr-42","name":"You've Got Mail","requires":[]},
-        {"id":"pr-43","name":"Glory to CPSU - Part 1","requires":[]},
+        {"id":"pr-43","name":"Glory to CPSU - Part 1","requires":["pr-42"]},
         {"id":"pr-44","name":"Glory to CPSU - Part 2","requires":["pr-43"]},
-        {"id":"pr-45","name":"Best Job in the World","requires":["pr-15"]},
-        {"id":"pr-46","name":"Kings of the Rooftops","requires":[]},
-        {"id":"pr-47","name":"Green Corridor","requires":[]},
-        {"id":"pr-48","name":"Green Corridor (BEAR)","requires":[]},
+        {"id":"pr-45","name":"Best Job in the World","requires":["pr-46"]},
+        {"id":"pr-46","name":"Kings of the Rooftops","requires":["pr-16"]},
+        {"id":"pr-47","name":"Green Corridor","requires":["pk-13"]},
+        {"id":"pr-48","name":"Green Corridor (BEAR)","requires":["pk-13"]},
         {"id":"pr-49","name":"Gendarmerie - Mall Cop","requires":[]},
         {"id":"pr-50","name":"Gendarmerie - Tickets, Please","requires":["pr-49"]},
         {"id":"pr-51","name":"Gendarmerie - District Patrol","requires":["pr-50"]},
-        {"id":"pr-52","name":"The Good Times - Part 1","requires":["pr-18"]},
-        {"id":"pr-53","name":"The Good Times - Part 2","requires":["pr-52"]},
-        {"id":"pr-54","name":"Viewer","requires":[]},
-        {"id":"pr-55","name":"Hell on Earth - Part 1","requires":[]},
+        {"id":"pr-52","name":"The Good Times - Part 1","requires":["pr-36"]},
+        {"id":"pr-53","name":"The Good Times - Part 2","requires":["mc-53"]},
+        {"id":"pr-54","name":"Viewer","requires":["sk-40"]},
+        {"id":"pr-55","name":"Hell on Earth - Part 1","requires":["pr-52"]},
         {"id":"pr-56","name":"Hell on Earth - Part 2","requires":["pr-55"]},
-        {"id":"pr-57","name":"Possessor","requires":[]},
-        {"id":"pr-58","name":"Forge a Friendship","requires":["pr-33"]},
-        {"id":"pr-59","name":"Half-Empty","requires":[]},
-        {"id":"pr-60","name":"Stick in the Wheel","requires":[]},
+        {"id":"pr-57","name":"Possessor","requires":["pr-7"]},
+        {"id":"pr-58","name":"Forge a Friendship","requires":["bt-6"]},
+        {"id":"pr-59","name":"Half-Empty","requires":["pr-58"]},
+        {"id":"pr-60","name":"Stick in the Wheel","requires":["pr-59"]},
         {"id":"pr-61","name":"The Art of Explosion","requires":["pr-10"]}
       ],
       "Therapist": [
@@ -156,26 +206,26 @@
         {"id":"th-8","name":"Postman Pat - Part 2","requires":["pr-7"]},
         {"id":"th-9","name":"General Wares","requires":["th-7"]},
         {"id":"th-10","name":"Car Repair","requires":["th-7"]},
-        {"id":"th-11","name":"Out of Curiosity","requires":["sk-42"]},
-        {"id":"th-12","name":"Trust Regain","requires":["th-11"]},
+        {"id":"th-11","name":"Out of Curiosity","requires":["sk-9"],"fails":["pr-21","sk-10"]},
+        {"id":"th-12","name":"Trust Regain","requires":[],"requiresAny":["pr-21","sk-10"]},
         {"id":"th-13","name":"Population Census","requires":["th-7"]},
         {"id":"th-14","name":"Pets Won't Need It - Part 1","requires":["th-13"]},
         {"id":"th-15","name":"Pets Won't Need It - Part 2","requires":["th-14"]},
         {"id":"th-16","name":"All Is Revealed","requires":["mc-25"]},
         {"id":"th-17","name":"Beneath The Streets","requires":["th-15"]},
-        {"id":"th-18","name":"Supply Plans","requires":["th-7"]},
+        {"id":"th-18","name":"Supply Plans","requires":["th-7"],"fails":["sk-20"]},
         {"id":"th-19","name":"Disease History","requires":["th-7"]},
-        {"id":"th-20","name":"Dangerous Road","requires":["th-18"]},
+        {"id":"th-20","name":"Dangerous Road","requires":[],"requiresAny":["th-18","sk-20"]},
         {"id":"th-21","name":"Thirsty - Echo","requires":["sk-53"]},
         {"id":"th-22","name":"Thirsty - Secrets","requires":["th-21"]},
-        {"id":"th-23","name":"A Healthy Alternative","requires":["pk-42"]},
+        {"id":"th-23","name":"A Healthy Alternative","requires":["pk-28"],"fails":["pk-29"]},
         {"id":"th-24","name":"This Tape Sucks","requires":["mc-41"]},
         {"id":"th-25","name":"Urban Medicine","requires":["th-13"]},
         {"id":"th-26","name":"Seaside Vacation","requires":["th-19"]},
         {"id":"th-27","name":"Abandoned Cargo","requires":["th-26"]},
         {"id":"th-28","name":"Shipment Tracking","requires":["th-27"]},
         {"id":"th-29","name":"Closer to the People","requires":["th-28"]},
-        {"id":"th-30","name":"Ambulances Again","requires":["jail-18","th-25"]},
+        {"id":"th-30","name":"Ambulances Again","requires":["jail-29","th-25"]},
         {"id":"th-31","name":"Health Care Privacy - Part 1","requires":["th-7"]},
         {"id":"th-32","name":"Health Care Privacy - Part 2","requires":["th-31"]},
         {"id":"th-33","name":"Health Care Privacy - Part 3","requires":["th-32"]},
@@ -185,7 +235,7 @@
         {"id":"th-37","name":"Health Care Privacy - Part 6","requires":["th-35"]},
         {"id":"th-38","name":"Colleagues - Part 1","requires":["th-9"]},
         {"id":"th-39","name":"Colleagues - Part 2","requires":["th-38"]},
-        {"id":"th-40","name":"Colleagues - Part 3","requires":["jail-50","th-39"]},
+        {"id":"th-40","name":"Colleagues - Part 3","requires":["th-39","sk-33","mc-45"],"fails":["jail-45"]},
         {"id":"th-41","name":"Lost Contact","requires":["th-32"]},
         {"id":"th-42","name":"Drug Trafficking","requires":["th-41"]},
         {"id":"th-43","name":"Quality Standard","requires":["pr-52"]},
@@ -195,15 +245,15 @@
         {"id":"th-47","name":"Crisis","requires":["th-44"]}
       ],
       "Fence": [
-        {"id":"fn-0","name":"Between Two Fires [PVP ZONE]","requires":["th-30"]},
+          {"id":"fn-0","name":"Between Two Fires [PVP ZONE]","requires":["rf-1"],"fails":["rf-6","lk-13"]},
         {"id":"fn-1","name":"Is This a Reference?","requires":[]},
-        {"id":"fn-2","name":"Collector","requires":["pr-2","pr-7","pr-9","pr-11","pr-12","th-18","th-10","th-23","th-37","th-44","mc-25","mc-26","mc-27","mc-35","mc-37","mc-62","mc-72","mc-81","mc-82","mc-101","mc-103","mc-108","mc-109","mc-110","pk-10","pk-16","pk-33","pk-39","pk-49","sk-13","sk-21","sk-55","sk-56","jail-18","jail-24","jail-38","jail-50","jail-55","jail-65","jail-67","jail-77","jail-78","jail-79","jail-80","jail-82","jail-95","rg-6","rg-21","rg-27","rg-28"]},
+          {"id":"fn-2","name":"Collector","requires":["jail-8","jail-31","jail-20","jail-19","jail-21","jail-24","jail-22","jail-26","pr-25","pr-40","sk-16","th-10","pr-57","th-8","mc-11","mc-18","jail-32","mc-13","sk-19","th-16","mc-17","mc-24","pk-26","mc-25","pk-27","mc-30","sk-21","jail-35","rg-8","mc-37","rg-11","th-29","pk-33","pr-33","pr-35","pr-28","jail-37","th-37","sk-13","jail-44","pk-36","rg-18","sk-37","jail-48","pk-37","mc-47","rg-25","pr-20","rg-29","th-42","jail-52","rg-33","rg-37","mc-56","jail-43","sk-44","pk-41","pk-42","jail-54","th-46","sk-51","mc-89","pr-9","mc-90","jail-56","pr-66","th-47","mc-81","rg-46","pr-30"]},
         {"id":"fn-3","name":"The Choice","requires":["pr-18"]},
         {"id":"fn-4","name":"Compensation for Damage - Trust","requires":[]},
         {"id":"fn-5","name":"Compensation for Damage - Wager","requires":[]},
         {"id":"fn-6","name":"Compensation for Damage - Barkeep","requires":[]},
         {"id":"fn-7","name":"Compensation for Damage - Collection","requires":[]},
-        {"id":"fn-8","name":"Friend Among Strangers","requires":["th-30"]},
+          {"id":"fn-8","name":"Friend Among Strangers","requires":["fn-13"]},
         {"id":"fn-9","name":"Immunity","requires":["fn-8"]},
         {"id":"fn-10","name":"Small Business - Part 1","requires":["fn-9"]},
         {"id":"fn-11","name":"Small Business - Part 2","requires":["fn-10"]},
@@ -213,7 +263,7 @@
       ],
       "Skier": [
         {"id":"sk-0","name":"Burning Rubber","requires":[]},
-        {"id":"sk-1","name":"Supplier","requires":[]},
+        {"id":"sk-1","name":"Supplier","requires":["sk-0"]},
         {"id":"sk-2","name":"The Extortionist","requires":["sk-1"]},
         {"id":"sk-3","name":"What's on the Flash Drive?","requires":["sk-2"]},
         {"id":"sk-4","name":"Golden Swag","requires":["sk-3"]},
@@ -222,29 +272,29 @@
         {"id":"sk-7","name":"Chemical - Part 1","requires":["sk-4"]},
         {"id":"sk-8","name":"Chemical - Part 2","requires":["sk-7"]},
         {"id":"sk-9","name":"Chemical - Part 3","requires":["sk-8"]},
-        {"id":"sk-10","name":"Chemical - Part 4","requires":["sk-9"]},
-        {"id":"sk-11","name":"Loyalty Buyout","requires":["sk-10"]},
+        {"id":"sk-10","name":"Chemical - Part 4","requires":["sk-9"],"fails":["pr-21","th-11"]},
+        {"id":"sk-11","name":"Loyalty Buyout","requires":[],"requiresAny":["pr-21","th-11"]},
         {"id":"sk-12","name":"Vitamins - Part 1","requires":["sk-9"]},
         {"id":"sk-13","name":"Vitamins - Part 2","requires":["sk-12"]},
         {"id":"sk-14","name":"Beyond the Red Meat - Part 1","requires":["sk-13"]},
         {"id":"sk-15","name":"Beyond the Red Meat - Part 2","requires":["sk-14"]},
-        {"id":"sk-16","name":"Stirrup","requires":["sk-2"]},
+        {"id":"sk-16","name":"Stirrup","requires":["sk-1"]},
         {"id":"sk-17","name":"Easy Money - Part 1 [PVP ZONE]","requires":["sk-0"]},
-        {"id":"sk-18","name":"Exit Here","requires":["mc-26"]},
+        {"id":"sk-18","name":"Exit Here","requires":["mc-12"]},
         {"id":"sk-19","name":"The Walls Have Eyes","requires":["sk-18"]},
-        {"id":"sk-20","name":"Kind of Sabotage","requires":["th-18"]},
-        {"id":"sk-21","name":"Safe Corridor","requires":["sk-10"]},
-        {"id":"sk-22","name":"Thirsty - Breadwinner","requires":["jail-36"]},
+        {"id":"sk-20","name":"Kind of Sabotage","requires":["th-18"],"fails":["th-18"]},
+        {"id":"sk-21","name":"Safe Corridor","requires":[],"requiresAny":["sk-10","pr-21","th-11"]},
+        {"id":"sk-22","name":"Thirsty - Breadwinner","requires":["jail-34"]},
         {"id":"sk-23","name":"Thirsty - Delivery","requires":["sk-22"]},
-        {"id":"sk-24","name":"Indisputable Authority","requires":["mc-41"]},
+        {"id":"sk-24","name":"Indisputable Authority","requires":["mc-35"]},
         {"id":"sk-25","name":"Setup","requires":["sk-6"]},
         {"id":"sk-26","name":"Long Road","requires":["sk-6"]},
-        {"id":"sk-27","name":"The Higher They Fly","requires":["bt-6"]},
+        {"id":"sk-27","name":"The Higher They Fly","requires":[],"requiresAny":["bt-4","bt-12"]},
         {"id":"sk-28","name":"Route Deviation","requires":["sk-27"]},
         {"id":"sk-29","name":"Hindsight 20/20","requires":["sk-28"]},
         {"id":"sk-30","name":"Key Partner","requires":["sk-29"]},
         {"id":"sk-31","name":"Killer Argument","requires":["sk-30"]},
-        {"id":"sk-32","name":"Choose Your Friends Wisely","requires":["sk-31","bt-0"]},
+        {"id":"sk-32","name":"Choose Your Friends Wisely","requires":["sk-31","bt-11"],"fails":["bt-13","bt-14"]},
         {"id":"sk-33","name":"Rigged Game","requires":["pr-22"]},
         {"id":"sk-34","name":"Informed Means Armed","requires":["sk-25"]},
         {"id":"sk-35","name":"Chumming","requires":["sk-34"]},
@@ -253,21 +303,20 @@
         {"id":"sk-38","name":"Lend-Lease - Part 1","requires":["sk-6"]},
         {"id":"sk-39","name":"Bullshit","requires":["sk-35"]},
         {"id":"sk-40","name":"Minute of Fame","requires":["pr-53"]},
-        {"id":"sk-41","name":"Serious Allegations","requires":["sk-54"]},
-        {"id":"sk-42","name":"Proper Comeback","requires":["mc-49"]},
+        {"id":"sk-41","name":"Serious Allegations","requires":["pr-54"]},
+        {"id":"sk-42","name":"Proper Comeback","requires":["mc-54"]},
         {"id":"sk-43","name":"Pyramid Scheme","requires":["sk-13"]},
         {"id":"sk-44","name":"Missing Cargo","requires":["sk-26"]},
         {"id":"sk-45","name":"Silent Caliber","requires":["sk-39"]},
         {"id":"sk-46","name":"Debtor","requires":["sk-35"]},
         {"id":"sk-47","name":"House Arrest - Part 1","requires":["sk-46"]},
         {"id":"sk-48","name":"House Arrest - Part 2","requires":["sk-47"]},
-        {"id":"sk-49","name":"Top Secret","requires":["sk-44","jail-44"]},
+        {"id":"sk-49","name":"Top Secret","requires":["sk-44","mc-66"]},
         {"id":"sk-50","name":"Connections Up North","requires":["sk-45","jail-38"]},
         {"id":"sk-51","name":"Flint","requires":["sk-35"]},
         {"id":"sk-52","name":"Irresistible","requires":["sk-51"]},
         {"id":"sk-53","name":"Dangerous Props","requires":["sk-52"]},
-        {"id":"sk-54","name":"Viewer","requires":[]},
-        {"id":"sk-55","name":"Fair Price - Part 1","requires":["mc-31"]},
+        {"id":"sk-55","name":"Fair Price - Part 1","requires":["mc-86"]},
         {"id":"sk-56","name":"Fair Price - Part 2","requires":["sk-55"]},
         {"id":"sk-57","name":"Night Sweep","requires":["sk-33"]},
         {"id":"sk-58","name":"Profitable Venture","requires":[]},
@@ -308,14 +357,14 @@
         {"id":"pk-26","name":"Classified Technologies","requires":["pk-18"]},
         {"id":"pk-27","name":"Revision - Lighthouse","requires":["pk-18"]},
         {"id":"pk-28","name":"Overpopulation","requires":["pk-6"]},
-        {"id":"pk-29","name":"One Less Loose End","requires":["pk-28"]},
-        {"id":"pk-30","name":"Confidential Info","requires":["mc-41"]},
+        {"id":"pk-29","name":"One Less Loose End","requires":["pk-28"],"fails":["th-23"]},
+        {"id":"pk-30","name":"Confidential Info","requires":["mc-35"]},
         {"id":"pk-31","name":"Revision - Streets of Tarkov","requires":["pk-18"]},
         {"id":"pk-32","name":"New Day, New Paths","requires":["pk-31"]},
         {"id":"pk-33","name":"The Cult - Part 2","requires":["pk-7"]},
         {"id":"pk-34","name":"Road Closed (USEC)","requires":["pk-13"]},
         {"id":"pk-35","name":"Samples","requires":["pk-0","pr-22"]},
-        {"id":"pk-36","name":"TerraGroup Employee","requires":["pk-35","th-40"]},
+        {"id":"pk-36","name":"TerraGroup Employee","requires":["pk-35"],"requiresAny":["th-40","jail-45"]},
         {"id":"pk-37","name":"Insomnia","requires":["pk-17"]},
         {"id":"pk-38","name":"Worst Job in the World","requires":["pk-24","pk-31"]},
         {"id":"pk-39","name":"Counteraction (USEC)","requires":["pk-9"]},
@@ -324,7 +373,7 @@
         {"id":"pk-42","name":"The Guide","requires":["pk-24"]},
         {"id":"pk-43","name":"Your Car Needs a Service","requires":["pk-17"]},
         {"id":"pk-44","name":"The Cleaner","requires":["pk-42"]},
-        {"id":"pk-45","name":"Trophies","requires":["jail-78","pk-0"]},
+        {"id":"pk-45","name":"Trophies","requires":["jail-18"]},
         {"id":"pk-46","name":"Special Equipment","requires":["pk-45"]}
       ],
       "Mechanic": [
@@ -342,9 +391,9 @@
         {"id":"mc-11","name":"Bad Habit","requires":["mc-9"]},
         {"id":"mc-12","name":"Scout","requires":["mc-10"]},
         {"id":"mc-13","name":"Broadcast - Part 1","requires":["mc-9"]},
-        {"id":"mc-14","name":"Forklift Certified","requires":["pr-22"]},
+          {"id":"mc-14","name":"Forklift Certified","requires":["mc-15"]},
         {"id":"mc-15","name":"Black Swan","requires":["mc-12"]},
-        {"id":"mc-16","name":"Secrets of Polikhim","requires":["mc-25"]},
+          {"id":"mc-16","name":"Secrets of Polikhim","requires":["mc-19"]},
         {"id":"mc-17","name":"Passion for Ergonomics","requires":["mc-9"]},
         {"id":"mc-18","name":"Insider","requires":["mc-8","mc-4"]},
         {"id":"mc-19","name":"Capacity Check","requires":["mc-14","mc-7"]},
@@ -377,7 +426,7 @@
         {"id":"mc-46","name":"Gunsmith - Part 12","requires":["mc-44"]},
         {"id":"mc-47","name":"Energy Crisis","requires":["mc-23"]},
         {"id":"mc-48","name":"Gunsmith - Part 13","requires":["mc-46"]},
-        {"id":"mc-49","name":"Developer's Secrets - Part 1","requires":["mc-58"]},
+          {"id":"mc-49","name":"Developer's Secrets - Part 1","requires":["mc-51"]},
         {"id":"mc-50","name":"Developer's Secrets - Part 2","requires":["mc-49"]},
         {"id":"mc-51","name":"Surveillance","requires":["mc-28","mc-37"]},
         {"id":"mc-52","name":"Gunsmith - Part 14","requires":["mc-48"]},
@@ -395,13 +444,13 @@
         {"id":"mc-64","name":"Key to the Tower","requires":["mc-63"]},
         {"id":"mc-65","name":"Knock-Knock","requires":["mc-64"]},
         {"id":"mc-66","name":"Getting Acquainted","requires":["mc-65"]},
-        {"id":"mc-67","name":"Make Amends - Buyout","requires":["mc-66"]},
+        {"id":"mc-67","name":"Make Amends - Buyout"},
         {"id":"mc-68","name":"Make Amends - Equipment","requires":["mc-67"]},
         {"id":"mc-69","name":"Make Amends","requires":["mc-68"]},
-        {"id":"mc-70","name":"Make Amends - Security","requires":["mc-69"]},
+        {"id":"mc-70","name":"Make Amends - Security"},
         {"id":"mc-71","name":"Make Amends - Sweep Up","requires":["mc-70"]},
         {"id":"mc-72","name":"Make Amends","requires":["mc-71"]},
-        {"id":"mc-73","name":"Make Amends - Software","requires":["mc-69"]},
+        {"id":"mc-73","name":"Make Amends - Software"},
         {"id":"mc-74","name":"Make Amends - Quarantine","requires":["mc-73"]},
         {"id":"mc-75","name":"Make Amends","requires":["mc-74"]},
         {"id":"mc-76","name":"Goals and Means","requires":["mc-55","mc-66"]},
@@ -413,32 +462,35 @@
         {"id":"mc-82","name":"Gunsmith - Part 23","requires":["mc-81"]},
         {"id":"mc-83","name":"Gunsmith - Part 24","requires":["mc-82"]},
         {"id":"mc-84","name":"Gunsmith - Part 25","requires":["mc-83"]},
-        {"id":"mc-85","name":"Network Provider - Part 1","requires":["jail-78","sk-10","pk-17","mc-28","rg-5","mc-54","mc-53","mc-42"]},
-        {"id":"mc-86","name":"Hobby Club","requires":["mc-0"]},
+        {"id":"mc-85","name":"Network Provider - Part 1","requires":["pk-17","mc-28","jail-36","rg-7","mc-43","sk-47","th-41","th-26","pk-33","jail-18","pr-16","rg-9"],"requiresAny":["sk-10","pr-21","th-11"]},
+        {"id":"mc-86","name":"Hobby Club"},
         {"id":"mc-87","name":"Calibration","requires":["mc-45"]},
         {"id":"mc-88","name":"The Courier","requires":["mc-87"]},
         {"id":"mc-89","name":"Psycho Sniper","requires":["pk-24"]},
-        {"id":"mc-90","name":"Import","requires":["mc-23"]},
-        {"id":"mc-91","name":"Special Comms","requires":["mc-87"]}
+        {"id":"mc-90","name":"Import","requires":["mc-23"]}
       ],
       "Ref": [
-        {"id":"rf-0","name":"Against the Conscience - Part 1 [PVP ZONE]","requires":["rf-3","ref-4"]},
+        {"id":"rf-0","name":"Against the Conscience - Part 1 [PVP ZONE]","requires":["rf-4","rf-21"]},
         {"id":"rf-1","name":"Against the Conscience - Part 2 [PVP ZONE]","requires":["rf-0"]},
-        {"id":"rf-2","name":"Balancing - Part 1 [PVP ZONE]","requires":["rf-5"]},
+        {"id":"rf-2","name":"Balancing - Part 1 [PVP ZONE]","requires":["rf-7"]},
         {"id":"rf-3","name":"Balancing - Part 2 [PVP ZONE]","requires":["rf-2"]},
-        {"id":"rf-4","name":"Create a Distraction - Part 1 [PVP ZONE]","requires":["rf-6"]},
+        {"id":"rf-4","name":"Create a Distraction - Part 1 [PVP ZONE]","requires":["rf-10"]},
         {"id":"rf-5","name":"Create a Distraction - Part 2 [PVP ZONE]","requires":["rf-4"]},
-        {"id":"rf-6","name":"Decisions, Decisions [PVP ZONE]","requires":["fn-0"]},
+        {"id":"rf-6","name":"Decisions, Decisions [PVP ZONE]","requires":["rf-1"],"fails":["fn-0","lk-13"]},
         {"id":"rf-7","name":"Easy Money - Part 2 [PVP ZONE]","requires":["sk-17"]},
-        {"id":"rf-8","name":"Postponed Reward [PVP ZONE]","requires":["lk-14"]},
+        {"id":"rf-8","name":"Postponed Reward [PVP ZONE]","requires":["lk-13"]},
         {"id":"rf-9","name":"Provide Viewership","requires":["rf-7"]},
         {"id":"rf-10","name":"Surprise [PVP ZONE]","requires":["rf-3"]},
-        {"id":"rf-11","name":"To Great Heights! - Part 1 [PVP ZONE]","requires":["rf-2"]},
+        {"id":"rf-11","name":"To Great Heights! - Part 1 [PVP ZONE]","requires":["rf-19"]},
         {"id":"rf-12","name":"To Great Heights! - Part 2 [PVP ZONE]","requires":["rf-11"]},
         {"id":"rf-13","name":"To Great Heights! - Part 3 [PVP ZONE]","requires":["rf-12"]},
         {"id":"rf-14","name":"To Great Heights! - Part 4 [PVP ZONE]","requires":["rf-13"]},
         {"id":"rf-15","name":"To Great Heights! - Part 5 [PVP ZONE]","requires":["rf-14"]},
-        {"id":"rf-16","name":"Easy Money - Part 1 [PVP ZONE]","requires":["rf-1"]}
+        {"id":"rf-17","name":"Arena Business [PVP ZONE]","requires":["rf-2","rf-19","rf-21"]},
+        {"id":"rf-18","name":"Professional Fitness - Part 1 [PVP ZONE]","requires":["rf-2"]},
+        {"id":"rf-19","name":"Professional Fitness - Part 2 [PVP ZONE]","requires":["rf-18"]},
+        {"id":"rf-20","name":"To Great Heights! - Part 6 [PVP ZONE]","requires":["rf-15"]},
+        {"id":"rf-21","name":"Hold the Lead [PVP ZONE]","requires":["rf-20"]}
       ],
       "Jaeger": [
         {"id":"jail-0","name":"The Tarkov Shooter - Part 1","requires":["jail-1"]},
@@ -459,7 +511,7 @@
         {"id":"jail-15","name":"The Survivalist Path - Eagle-Owl","requires":["jail-13"]},
         {"id":"jail-16","name":"The Survivalist Path - Combat Medic","requires":["jail-15"]},
         {"id":"jail-17","name":"The Huntsman Path - Trophy","requires":["jail-30"]},
-        {"id":"jail-18","name":"The Huntsman Path - Forest Cleaning","requires":["jail-30"]},
+        {"id":"jail-18","name":"The Huntsman Path - Forest Cleaning","requires":["jail-27"]},
         {"id":"jail-19","name":"The Huntsman Path - Controller","requires":["jail-18"]},
         {"id":"jail-20","name":"The Huntsman Path - Justice","requires":["jail-17"]},
         {"id":"jail-21","name":"The Huntsman Path - Evil Watchman","requires":["jail-18"]},
@@ -471,22 +523,22 @@
         {"id":"jail-27","name":"The Huntsman Path - Secured Perimeter","requires":["jail-3","jail-13"]},
         {"id":"jail-28","name":"The Delicious Sausage","requires":["jail-10"]},
         {"id":"jail-29","name":"Cease Fire!","requires":["jail-28"]},
-        {"id":"jail-30","name":"The Huntsman Path - Big Game","requires":["jail-27"]},
+        {"id":"jail-30","name":"The Huntsman Path - Big Game","requires":["jail-18","th-25"]},
         {"id":"jail-31","name":"The Survivalist Path - Junkie","requires":["jail-16"]},
         {"id":"jail-32","name":"The Huntsman Path - Factory Chief","requires":["jail-18","mc-12"]},
         {"id":"jail-33","name":"The Huntsman Path - Woods Keeper","requires":["jail-27","th-18"]},
         {"id":"jail-34","name":"Thirsty - Hounds","requires":["jail-28"]},
-        {"id":"jail-35","name":"Dragnet","requires":["pk-29"]},
+          {"id":"jail-35","name":"Dragnet","requiresAny":["pk-29","th-23"]},
         {"id":"jail-36","name":"Courtesy Visit","requires":["jail-13"]},
         {"id":"jail-37","name":"The Hermit","requires":["jail-13"]},
         {"id":"jail-38","name":"Reserve","requires":["jail-28"]},
         {"id":"jail-39","name":"Shady Business","requires":["jail-1","sk-3"]},
         {"id":"jail-40","name":"Broadcast - Part 3","requires":["mc-28"]},
-        {"id":"jail-41","name":"The Huntsman Path - Eraser - Part 1","requires":["jail-43"]},
+        {"id":"jail-41","name":"The Huntsman Path - Eraser - Part 1","requires":["jail-42"]},
         {"id":"jail-42","name":"Pest Control","requires":["jail-38"]},
         {"id":"jail-43","name":"The Huntsman Path - Eraser - Part 2","requires":["jail-27","jail-41"]},
         {"id":"jail-44","name":"The Huntsman Path - Outcasts","requires":["jail-18"]},
-        {"id":"jail-45","name":"The Huntsman Path - Sadist","requires":["sk-33","th-39","mc-45"]},
+        {"id":"jail-45","name":"The Huntsman Path - Sadist","requires":["sk-33","th-39","mc-45"],"fails":["th-40"]},
         {"id":"jail-46","name":"The Huntsman Path - Administrator","requires":["jail-18"]},
         {"id":"jail-47","name":"The Huntsman Path - Crooked Cop","requires":["jail-46"]},
         {"id":"jail-48","name":"Ambulance","requires":["jail-39"]},
@@ -497,14 +549,12 @@
         {"id":"jail-53","name":"Forester's Duty","requires":["jail-51"]},
         {"id":"jail-54","name":"Hunting Trip","requires":["jail-33"]},
         {"id":"jail-55","name":"Hunter","requires":["jail-33"]},
-        {"id":"jail-56","name":"Stray Dogs","requires":["jail-17","jail-33","jail-164"]},
+        {"id":"jail-56","name":"Stray Dogs","requires":["jail-17","jail-33","jail-62"]},
         {"id":"jail-57","name":"Slaughterhouse","requires":["jail-46","jail-49"]},
-        {"id":"jail-58","name":"Swift One","requires":["jail-45"]},
-        {"id":"jail-59","name":"The Huntsman Path - Relentless","requires":["jail-17","jail-32","jail-33","jail-41","jail-45","jail-164"]},
-        {"id":"jail-60","name":"The Hunsman Path - Big Game","requires":["jail-18","th-25"]},
-        {"id":"jail-61","name":"The Survivalist Path - Eagle-owl","requires":["jail-13"]},
+          {"id":"jail-58","name":"Swift One","requiresAny":["jail-45","th-40"]},
+        {"id":"jail-59","name":"The Huntsman Path - Relentless","requires":["jail-17","jail-32","jail-33","jail-41","jail-62"],"requiresAny":["jail-45","th-40"]},
         {"id":"jail-62","name":"The Huntsman Path - Sellout","requires":["jail-18","sk-53"]},
-        {"id":"jail-63","name":"The Huntsman path - Relentless","requires":["jail-17","jail-32","jail-33","jail-41","jail-45","jail-62"]}
+        {"id":"jail-63","name":"The Huntsman path - Relentless","requires":["jail-17","jail-32","jail-33","jail-41","jail-62"],"requiresAny":["jail-45","th-40"]}
       ],
       "Ragman": [
         {"id":"rg-0","name":"Only Business","requires":[]},
@@ -513,18 +563,18 @@
         {"id":"rg-3","name":"Make ULTRA Great Again","requires":["rg-0"]},
         {"id":"rg-4","name":"Big Sale","requires":["rg-0"]},
         {"id":"rg-5","name":"Audit","requires":["rg-0"]},
-        {"id":"rg-6","name":"Dressed to Kill","requires":["rg-8"]},
-        {"id":"rg-7","name":"Database - Part 2","requires":["rg-9"]},
-        {"id":"rg-8","name":"Inventory Check","requires":["rg-11"]},
-        {"id":"rg-9","name":"A Fuel Matter","requires":["rg-8"]},
+          {"id":"rg-6","name":"Dressed to Kill","requires":["rg-12"]},
+          {"id":"rg-7","name":"Database - Part 2","requires":["rg-13"]},
+          {"id":"rg-8","name":"Inventory Check","requires":["rg-9"]},
+          {"id":"rg-9","name":"A Fuel Matter","requires":["rg-12"]},
         {"id":"rg-10","name":"Nothing Fishy About This","requires":["rg-4"]},
         {"id":"rg-11","name":"Break the Deal","requires":["rg-3"]},
         {"id":"rg-12","name":"The Blood of War - Part 1","requires":["rg-4","rg-3"]},
         {"id":"rg-13","name":"Database - Part 1","requires":["rg-4","rg-3"]},
         {"id":"rg-14","name":"Gratitude","requires":["rg-6","rg-7"]},
         {"id":"rg-15","name":"Ballet Lover","requires":["rg-5"]},
-        {"id":"rg-16","name":"Stabilize Business","requires":["bt-8"]},
-        {"id":"rg-17","name":"Another Shipping Delay","requires":["bt-7","jail-29"]},
+        {"id":"rg-16","name":"Stabilize Business","requires":["bt-7"]},
+        {"id":"rg-17","name":"Another Shipping Delay","requires":["bt-6"]},
         {"id":"rg-18","name":"Minibus","requires":["rg-7"]},
         {"id":"rg-19","name":"Drip-Out - Part 1 (BEAR)","requires":["rg-18"]},
         {"id":"rg-20","name":"Drip-Out - Part 1 (USEC)","requires":["rg-18"]},
@@ -559,24 +609,23 @@
         {"id":"rg-49","name":"Textile - Part 2 (BEAR)","requires":["rg-47"]},
         {"id":"rg-50","name":"Textile - Part 2 (USEC)","requires":["rg-48"]},
         {"id":"rg-51","name":"Long Line","requires":["rg-46"]},
-        {"id":"rg-52","name":"Booze","requires":["rg-51"]},
-        {"id":"rg-53","name":"New Beginning","requires":[]}
+        {"id":"rg-52","name":"Booze","requires":["rg-51"]}
       ],
       "Lightkeeper": [
-        {"id":"lk-0","name":"Keeper's Word","requires":["rg-1","mc-36","rg-2","pk-30","sk-24","th-24"]},
-        {"id":"lk-1","name":"Order From Outside","requires":["jail-29"]},
-        {"id":"lk-2","name":"Simple Side Job","requires":["bt-9"]},
-        {"id":"lk-3","name":"Information Source","requires":["mc-65"]},
+        {"id":"lk-0","name":"Keeper's Word","requires":["bt-0","mc-36","rg-2","pk-30","sk-24","th-24"]},
+        {"id":"lk-1","name":"Order From Outside","requires":["bt-4"]},
+        {"id":"lk-2","name":"Simple Side Job","requires":["bt-12"]},
+        {"id":"lk-3","name":"Information Source","requires":["mc-66"]},
         {"id":"lk-4","name":"Missing Informant","requires":["lk-3"]},
         {"id":"lk-5","name":"Snatch","requires":["lk-4"]},
-        {"id":"lk-6","name":"Payback","requires":["lk-8"]},
+        {"id":"lk-6","name":"Payback","requires":["lk-7"]},
         {"id":"lk-7","name":"Return the Favor","requires":["lk-5"]},
         {"id":"lk-8","name":"Provocation","requires":["lk-6"]},
         {"id":"lk-9","name":"Following the Bread Crumbs","requires":["lk-8"]},
         {"id":"lk-10","name":"Spotter","requires":["lk-9"]},
         {"id":"lk-11","name":"Make an Impression","requires":["lk-10"]},
         {"id":"lk-12","name":"Trouble in the Big City","requires":["lk-11"]},
-        {"id":"lk-13","name":"Surprise Gift [PVP ZONE]","requires":["fn-0"]}
+        {"id":"lk-13","name":"Surprise Gift [PVP ZONE]","requires":["rf-1"],"fails":["fn-0","rf-6"]}
       ],
       "BTR Driver": [
         {"id":"bt-0","name":"Sensory Analysis - Part 2","requires":["rg-1"]},
@@ -584,30 +633,40 @@
         {"id":"bt-2","name":"Hot Wheels","requires":["bt-1"]},
         {"id":"bt-3","name":"Hot Wheels - Let's Try Again","requires":["bt-2"]},
         {"id":"bt-4","name":"Inevitable Response","requires":["bt-3"]},
-        {"id":"bt-5","name":"Building Foundations","requires":["bt-9"]},
+        {"id":"bt-5","name":"Building Foundations","requires":[],"requiresAny":["bt-4","bt-12"]},
         {"id":"bt-6","name":"Natural Exchange","requires":["bt-5"]},
         {"id":"bt-7","name":"Ask for Directions","requires":["rg-17"]},
         {"id":"bt-8","name":"Battery Change","requires":["pr-60"]},
         {"id":"bt-9","name":"Battery Change","requires":["rg-16"]},
-        {"id":"bt-10","name":"Protect the Sky","requires":["bt-8"]},
+        {"id":"bt-10","name":"Protect the Sky","requires":[],"requiresAny":["bt-8","bt-9"]},
         {"id":"bt-11","name":"Discombobulate","requires":["bt-10"]},
         {"id":"bt-12","name":"Swift Retribution","requires":["bt-2"]},
-        {"id":"bt-13","name":"The Price of Independence","requires":["bt-8","bt-11"]},
-        {"id":"bt-14","name":"The Price of Independence","requires":["bt-8","bt-11"]},
+        {"id":"bt-13","name":"The Price of Independence","requires":["bt-11"],"fails":["sk-32"]},
+        {"id":"bt-14","name":"The Price of Independence","requires":["bt-11"],"fails":["sk-32"]},
         {"id":"bt-15","name":"Shipping Delay - Part 1","requires":["mc-41"]}
       ]
     };
 
     const questLookup = Object.fromEntries(Object.values(FALLBACK_QUESTS_BY_TRADER).flat().map((q) => [q.id, q]));
+  const collectorQuest = questLookup["fn-2"];
+  const collectorRequiredQuestIds = new Set(Array.isArray(collectorQuest && collectorQuest.requires) ? collectorQuest.requires : []);
     const state = { activeTrader: "Prapor", progress: loadProgress(), zoom: 0.75, offset: { x: 0, y: 0 }, dragging: false, dragStart: { x: 0, y: 0 }, searchQuery: "" };
 
+    function isCompletedEntry(entry) {
+      return !!entry && (entry.state === "manual" || entry.state === "auto");
+    }
+    function isFailedEntry(entry) {
+      return !!entry && entry.state === "failed";
+    }
     function normalizeProgress(raw) {
       if (!raw || typeof raw !== "object") return {};
       const n = {};
       Object.entries(raw).forEach(([id, value]) => {
         if (value === true) n[id] = { state: "manual" };
-        else if (value && typeof value === "object" && (value.state === "manual" || value.state === "auto")) n[id] = value;
+        else if (value && typeof value === "object" && (value.state === "manual" || value.state === "auto" || value.state === "failed")) n[id] = value;
       });
+        if (n["pr-11"] && !n["pk-37"]) n["pk-37"] = n["pr-11"];
+        delete n["pr-11"];
       return n;
     }
     function loadProgress() {
@@ -615,9 +674,31 @@
       catch { return {}; }
     }
     function saveProgress() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress)); }
+    function getRequiredIds(quest) {
+      return Array.isArray(quest && quest.requires) ? quest.requires : [];
+    }
+    function getAlternativeRequiredIds(quest) {
+      return Array.isArray(quest && quest.requiresAny) ? quest.requiresAny : [];
+    }
+    function getAllRequirementIds(quest) {
+      return [...getRequiredIds(quest), ...getAlternativeRequiredIds(quest)];
+    }
+    function areQuestRequirementsMet(quest, isCompleted) {
+      const requiredIds = getRequiredIds(quest);
+      const alternativeIds = getAlternativeRequiredIds(quest);
+      const requiredOk = requiredIds.every((dep) => isCompleted(dep));
+      if (!requiredOk) return false;
+      if (alternativeIds.length === 0) return true;
+      return alternativeIds.some((dep) => isCompleted(dep));
+    }
+    function areRequirementsMet(quest, progress = state.progress) {
+      return areQuestRequirementsMet(quest, (dep) => isCompletedEntry(progress[dep]));
+    }
     function getStatus(quest) {
-      if (state.progress[quest.id]) return "completed";
-      return quest.requires.every((dep) => !!state.progress[dep]) ? "available" : "locked";
+      const entry = state.progress[quest.id];
+      if (isFailedEntry(entry)) return "failed";
+      if (isCompletedEntry(entry)) return "completed";
+      return areRequirementsMet(quest) ? "available" : "locked";
     }
     function fitText(name) {
       if (name.length < 16) return name;
@@ -639,13 +720,15 @@
         const q = byId[id];
         if (!q) return 1;
         visiting.add(id);
-        const deps = (q.requires || []).filter((dep) => !!byId[dep]);
-        if (deps.length === 0) {
+        const requiredDeps = getRequiredIds(q).filter((dep) => !!byId[dep]);
+        const alternativeDeps = getAlternativeRequiredIds(q).filter((dep) => !!byId[dep]);
+        if (requiredDeps.length === 0 && alternativeDeps.length === 0) {
           visiting.delete(id);
           return levelMemo[id] = 1;
         }
-        const depMax = Math.max(...deps.map(levelFor));
-        const level = Math.min(70, depMax + 2);
+        const requiredDepth = requiredDeps.length ? Math.max(...requiredDeps.map(levelFor)) : 1;
+        const alternativeDepth = alternativeDeps.length ? Math.min(...alternativeDeps.map(levelFor)) : 1;
+        const level = Math.min(70, Math.max(requiredDepth, alternativeDepth) + 2);
         visiting.delete(id);
         return levelMemo[id] = level;
       }
@@ -670,6 +753,43 @@
       const nested = quest.completes.flatMap((id) => expandAutoCompletions(id, visited));
       return [...new Set([...direct, ...nested])];
     }
+    function questDependsOn(sourceId, targetId, visited = new Set()) {
+      if (sourceId === targetId) return true;
+      if (visited.has(sourceId)) return false;
+      visited.add(sourceId);
+      const sourceQuest = questLookup[sourceId];
+      if (!sourceQuest) return false;
+      return getAllRequirementIds(sourceQuest).some((depId) => depId === targetId || questDependsOn(depId, targetId, visited));
+    }
+    function removeFailedBranchFromManual(manual, questId, visited = new Set()) {
+      if (visited.has(questId) || !manual.has(questId)) return;
+      visited.add(questId);
+      manual.delete(questId);
+      Object.values(questLookup).forEach((candidate) => {
+        if (getAllRequirementIds(candidate).includes(questId)) removeFailedBranchFromManual(manual, candidate.id, visited);
+      });
+    }
+    function applyManualBranchChoice(manual, chosenQuestId) {
+      const chosenQuest = questLookup[chosenQuestId];
+      if (!chosenQuest || !Array.isArray(chosenQuest.fails)) return;
+      chosenQuest.fails.forEach((failedQuestId) => {
+        if (questDependsOn(chosenQuestId, failedQuestId)) return;
+        removeFailedBranchFromManual(manual, failedQuestId);
+      });
+    }
+    function applyFailedStates(progress) {
+      Object.entries(progress).forEach(([sourceId, entry]) => {
+        if (!isCompletedEntry(entry)) return;
+        const sourceQuest = questLookup[sourceId];
+        if (!sourceQuest || !Array.isArray(sourceQuest.fails)) return;
+        sourceQuest.fails.forEach((failedQuestId) => {
+          if (!questLookup[failedQuestId]) return;
+          if (isCompletedEntry(progress[failedQuestId]) && !questDependsOn(sourceId, failedQuestId)) return;
+          progress[failedQuestId] = { state: "failed", source: sourceId };
+        });
+      });
+      return progress;
+    }
     function recomputeProgressFromManual(manualIds) {
       const manual = new Set(manualIds);
       let changed = true;
@@ -677,7 +797,7 @@
         changed = false;
         for (const id of [...manual]) {
           const q = questLookup[id];
-          const ok = q && (q.requires || []).every((dep) => manual.has(dep));
+          const ok = q && areQuestRequirementsMet(q, (dep) => manual.has(dep));
           if (!ok) { manual.delete(id); changed = true; }
         }
       }
@@ -689,19 +809,29 @@
           if (result[targetId]) return;
           const target = questLookup[targetId];
           if (!target) return;
-          const depsOk = target.requires.every((dep) => !!result[dep]);
+          const depsOk = areRequirementsMet(target, result);
           if (depsOk) result[targetId] = { state: "auto", source: sourceId };
         });
       }
-      return result;
+      return applyFailedStates(result);
     }
     function buildAutoLayout(quests) {
       const NODE_W = 180, NODE_H = 74, H_GAP = 110, V_GAP = 26, ROOT_GAP = 50, LEFT_PAD = 60, TOP_PAD = 50;
       const byId = Object.fromEntries(quests.map((q) => [q.id, q]));
       const children = {}; quests.forEach((q) => { children[q.id] = []; });
-      quests.forEach((q) => q.requires.forEach((dep) => { if (children[dep]) children[dep].push(q.id); }));
+      quests.forEach((q) => getAllRequirementIds(q).forEach((dep) => { if (children[dep]) children[dep].push(q.id); }));
       const depthMemo = {};
-      function depth(id) { if (depthMemo[id] !== undefined) return depthMemo[id]; const q = byId[id]; if (!q || q.requires.length === 0) return depthMemo[id] = 0; return depthMemo[id] = Math.max(...q.requires.map(depth)) + 1; }
+      function depth(id) {
+        if (depthMemo[id] !== undefined) return depthMemo[id];
+        const q = byId[id];
+        if (!q) return depthMemo[id] = 0;
+        const requiredDeps = getRequiredIds(q).filter((dep) => !!byId[dep]);
+        const alternativeDeps = getAlternativeRequiredIds(q).filter((dep) => !!byId[dep]);
+        if (requiredDeps.length === 0 && alternativeDeps.length === 0) return depthMemo[id] = 0;
+        const requiredDepth = requiredDeps.length ? Math.max(...requiredDeps.map(depth)) : 0;
+        const alternativeDepth = alternativeDeps.length ? Math.min(...alternativeDeps.map(depth)) : 0;
+        return depthMemo[id] = Math.max(requiredDepth, alternativeDepth) + 1;
+      }
       quests.forEach((q) => depth(q.id));
       const subtreeMemo = {};
       function subtree(id) {
@@ -711,7 +841,10 @@
         const total = kids.reduce((s, kid, i) => s + subtree(kid) + (i ? V_GAP : 0), 0);
         return subtreeMemo[id] = Math.max(NODE_H, total);
       }
-      const roots = quests.filter((q) => q.requires.length === 0 || q.requires.every((dep) => !byId[dep])).map((q) => q.id);
+      const roots = quests.filter((q) => {
+        const deps = getAllRequirementIds(q).filter((dep) => !!byId[dep]);
+        return deps.length === 0;
+      }).map((q) => q.id);
       roots.forEach((id) => subtree(id));
       const orderedRoots = [...roots].sort((a,b) => subtree(b)-subtree(a) || a.localeCompare(b));
       const positions = {};
@@ -746,6 +879,7 @@
       } else if (status === "available" || status === "locked") {
         manual.add(quest.id);
         addDependenciesRecursively(quest.id, manual);
+        applyManualBranchChoice(manual, quest.id);
       } else return;
       state.progress = recomputeProgressFromManual(manual);
       saveProgress();
@@ -774,7 +908,7 @@
       TRADERS.forEach((trader) => {
         const id = trader.id;
         const traderQuests = FALLBACK_QUESTS_BY_TRADER[id] || [];
-        const completed = traderQuests.filter((q) => state.progress[q.id]).length;
+        const completed = traderQuests.filter((q) => isCompletedEntry(state.progress[q.id])).length;
         const btn = document.createElement("button");
         btn.className = "trader" + (!isGlobalSearch && id === state.activeTrader ? " active" : "");
         btn.innerHTML =
@@ -808,7 +942,7 @@
       edges.setAttribute("height", layout.height);
       edges.innerHTML = "";
       quests.forEach((quest) => {
-        quest.requires.forEach((depId) => {
+        getAllRequirementIds(quest).forEach((depId) => {
           const dep = layout.positions[depId];
           const q = layout.positions[quest.id];
           if (!dep || !q) return;
@@ -827,13 +961,22 @@
         const pos = layout.positions[quest.id];
         if (!pos) return;
         const status = getStatus(quest);
+        const progressEntry = state.progress[quest.id];
         const btn = document.createElement("button");
         btn.className = "node " + status;
+        if (collectorRequiredQuestIds.has(quest.id)) {
+          btn.className += " collector-required";
+          btn.dataset.collectorBadge = "C";
+        }
         btn.style.left = pos.x + "px";
         btn.style.top = pos.y + "px";
         const level = levelByQuestId[quest.id] || 1;
         const label = isGlobalSearch ? "[" + quest.traderId + "] [Lv " + level + "] " + quest.name : "[Lv " + level + "] " + quest.name;
-        btn.title = (isGlobalSearch ? quest.traderId + " - " : "") + "Lvl " + level + " req - " + quest.name;
+        const failureSource = isFailedEntry(progressEntry) && progressEntry.source && questLookup[progressEntry.source]
+          ? " Failed by " + questLookup[progressEntry.source].name
+          : "";
+        const collectorHint = collectorRequiredQuestIds.has(quest.id) ? " Required for Collector." : "";
+        btn.title = (isGlobalSearch ? quest.traderId + " - " : "") + "Lvl " + level + " req - " + quest.name + failureSource + collectorHint;
         btn.textContent = fitText(label);
         btn.onclick = (e) => { e.stopPropagation(); toggleQuest(quest); };
         nodes.appendChild(btn);
