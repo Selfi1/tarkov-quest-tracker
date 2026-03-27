@@ -497,7 +497,7 @@
         const v = state.progress[quest.id];
         if (!v || v.state !== "manual") return;
         manual.delete(quest.id);
-      } else if (status === "available") {
+      } else if (status === "available" || status === "locked") {
         manual.add(quest.id);
         addDependenciesRecursively(quest.id, manual);
       } else return;
