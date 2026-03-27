@@ -465,7 +465,7 @@
         const total = kids.reduce((s, kid, i) => s + subtree(kid) + (i ? V_GAP : 0), 0);
         return subtreeMemo[id] = Math.max(NODE_H, total);
       }
-      const roots = quests.filter((q) => q.requires.length === 0).map((q) => q.id);
+      const roots = quests.filter((q) => q.requires.length === 0 || q.requires.every((dep) => !byId[dep])).map((q) => q.id);
       roots.forEach((id) => subtree(id));
       const orderedRoots = [...roots].sort((a,b) => subtree(b)-subtree(a) || a.localeCompare(b));
       const positions = {};
