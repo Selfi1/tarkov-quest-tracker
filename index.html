@@ -831,6 +831,12 @@
       state.dragging = false;
       canvas.classList.remove("dragging");
     }));
+    view.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const zoomDelta = e.deltaY > 0 ? -0.08 : 0.08;
+      state.zoom = Math.max(0.35, Math.min(1.35, state.zoom + zoomDelta));
+      render();
+    }, { passive: false });
     render();
   </script>
 </body>
