@@ -632,14 +632,22 @@
     function computeQuestLevels(quests) {
       const byId = Object.fromEntries(quests.map((q) => [q.id, q]));
       const levelMemo = {};
+      const visiting = new Set();
       function levelFor(id) {
         if (levelMemo[id] !== undefined) return levelMemo[id];
+        if (visiting.has(id)) return 1;
         const q = byId[id];
         if (!q) return 1;
+        visiting.add(id);
         const deps = (q.requires || []).filter((dep) => !!byId[dep]);
-        if (deps.length === 0) return levelMemo[id] = 1;
+        if (deps.length === 0) {
+          visiting.delete(id);
+          return levelMemo[id] = 1;
+        }
         const depMax = Math.max(...deps.map(levelFor));
-        return levelMemo[id] = Math.min(70, depMax + 2);
+        const level = Math.min(70, depMax + 2);
+        visiting.delete(id);
+        return levelMemo[id] = level;
       }
       const result = {};
       quests.forEach((q) => { result[q.id] = levelFor(q.id); });
