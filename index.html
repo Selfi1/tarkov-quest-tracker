@@ -482,6 +482,14 @@
       const maxY = Math.max(...Object.values(positions).map((p) => p.y), TOP_PAD) + NODE_H + TOP_PAD;
       return { positions, width: maxX, height: Math.max(maxY, 520), nodeWidth: NODE_W, nodeHeight: NODE_H };
     }
+    function addDependenciesRecursively(questId, manual, visited = new Set()) {
+      if (visited.has(questId)) return;
+      visited.add(questId);
+      const q = questLookup[questId];
+      if (!q) return;
+      manual.add(questId);
+      q.requires.forEach((depId) => addDependenciesRecursively(depId, manual, visited));
+    }
     function toggleQuest(quest) {
       const status = getStatus(quest);
       const manual = new Set(Object.entries(state.progress).filter(([,v]) => v && v.state === "manual").map(([id]) => id));
@@ -491,6 +499,7 @@
         manual.delete(quest.id);
       } else if (status === "available") {
         manual.add(quest.id);
+        addDependenciesRecursively(quest.id, manual);
       } else return;
       state.progress = recomputeProgressFromManual(manual);
       saveProgress();
