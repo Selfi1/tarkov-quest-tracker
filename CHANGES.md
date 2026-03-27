@@ -51,37 +51,126 @@
 
 ---
 
-## Current Quest Tracker Status (as of 2026-03-27 14:50)
+#### Change 5: Added Auto-Complete for Prerequisite Quests
+- **Time**: Later update
+- **What changed**:
+  - Completing a quest can now automatically mark prerequisite quests as completed when needed
+  - Progress recomputation was improved so manual and automatic completions stay consistent
+- **Why**: Large quest chains were too tedious to manage one quest at a time
+- **Files modified**: index.html (quest progress logic)
 
-### Total Quests: **273** across 11 traders
+---
+
+#### Change 6: Allowed Completing Locked Quests With Prerequisites
+- **Time**: Later update
+- **What changed**:
+  - Clicking a locked quest now fills in its prerequisite chain instead of blocking the action
+- **Why**: Users often know what they have already done and want fast backfilling
+- **Files modified**: index.html (quest toggle behavior)
+
+---
+
+#### Change 7: Replaced Fallback Quest Data With Comprehensive tarkov.dev Data
+- **Time**: Major data update
+- **What changed**:
+  - Replaced the earlier partial quest dataset with a much larger tarkov.dev-based quest database
+  - Expanded the tracker to 494 quests across 11 traders
+  - Added Ref quests, expanded Lightkeeper and BTR Driver, and greatly expanded all major traders
+  - Normalized quest IDs to trader-specific prefixes such as `pr-`, `th-`, `sk-`, `pk-`, `mc-`, `rf-`, `jail-`, `rg-`, `lk-`, and `bt-`
+  - Added many cross-trader dependencies and faction-specific quest variants
+- **Why**: The earlier dataset was incomplete and no longer matched the goal of tracking all quests
+- **Files modified**: index.html (FALLBACK_QUESTS_BY_TRADER)
+
+---
+
+#### Change 8: Added Mouse Wheel Zoom
+- **Time**: Usability update
+- **What changed**:
+  - Added wheel-based zoom in the quest canvas
+  - Scrolling up zooms in and scrolling down zooms out
+- **Why**: Manual zoom buttons alone were too slow for navigating large quest trees
+- **Files modified**: index.html (view event handlers)
+
+---
+
+#### Change 9: Added Quest Search Bar
+- **Time**: Usability update
+- **What changed**:
+  - Added a search input above the quest canvas
+  - Search filters quest nodes in real time as the user types
+- **Why**: With nearly 500 quests, manual scanning became inefficient
+- **Files modified**: index.html (UI and render filtering)
+
+---
+
+#### Change 10: Added Level Requirement Display
+- **Time**: Visibility update
+- **What changed**:
+  - Added computed level labels to quest nodes
+  - Added level requirement information to quest tooltips
+  - Level estimates are derived from quest dependency depth instead of a hardcoded data dump
+- **Why**: Users needed a quick way to visually gauge quest progression depth
+- **Files modified**: index.html (render and computed level logic)
+
+---
+
+#### Change 11: Improved Search Matching
+- **Time**: Search quality update
+- **What changed**:
+  - Search now normalizes repeated spaces and trailing spaces
+  - Partial phrase searches such as `The E` match reliably
+- **Why**: Small spacing differences caused confusing missed results
+- **Files modified**: index.html (search normalization)
+
+---
+
+#### Change 12: Added Global Search Across All Traders
+- **Time**: Search feature expansion
+- **What changed**:
+  - Typing in the search box now shows matches from all traders
+  - Search mode labels results by trader and changes the page title to `Search Results`
+  - Added cycle-safe quest level calculation so imperfect dependency data cannot break global search rendering
+- **Why**: Per-trader search was too limiting for a tracker of this size
+- **Files modified**: index.html (render logic, search mode, level calculation)
+
+---
+
+## Current Quest Tracker Status (as of 2026-03-27)
+
+### Total Quests: **494** across 11 traders
 
 | Trader | Count | Status |
 |--------|-------|--------|
-| Prapor | 60 | ✅ Comprehensive (was 35, added 25) |
-| Therapist | 31 | ✅ Good (likely 1-2 more exist) |
-| Mechanic | 38 | ✅ Complete  (just added tt-288) |
-| Jaeger | 41 | ✅ Complete |
-| Ragman | 32 | ✅ Complete |
-| Skier | 27 | ✅ Complete |
-| Peacekeeper | 29 | ✅ Complete |
-| Lightkeeper | 7 | ✅ Complete |
-| BTR Driver | 6 | ✅ Complete |
-| Fence | 2 | ✅ Complete (only 2 exist) |
-| Ref | 0 | ✅ Correct (operational tasks only) |
+| Prapor | 62 | ✅ Expanded |
+| Therapist | 48 | ✅ Expanded |
+| Fence | 15 | ✅ Expanded |
+| Skier | 65 | ✅ Expanded |
+| Peacekeeper | 47 | ✅ Expanded |
+| Mechanic | 92 | ✅ Expanded |
+| Ref | 17 | ✅ Added |
+| Jaeger | 64 | ✅ Expanded |
+| Ragman | 54 | ✅ Expanded |
+| Lightkeeper | 14 | ✅ Expanded |
+| BTR Driver | 16 | ✅ Expanded |
 
 ### Sources Used for Verification:
-1. **Official Wiki**: escapefromtarkov.fandom.com/wiki/Quests (primary source for quest table)
-2. **GitHub Community Databases**:
+1. **tarkov.dev**: Primary source for the comprehensive quest refresh
+2. **Official Wiki**: escapefromtarkov.fandom.com/wiki/Quests
+3. **GitHub Community Databases**:
    - Ropotov/tarkov-quests-json (updated Sep 2025)
    - mushipeas/tarkov-quests 
-3. **Reddit r/EscapefromTarkov**: Community quest discussions and references
-4. **Embedded Fallback Data**: Original quest data from game archives
+4. **Reddit r/EscapefromTarkov**: Community quest discussions and references
+5. **Embedded Fallback Data**: Original quest data from game archives
 
 ### Known Features:
-- Quest dependencies properly mapped (requires arrays)
-- Quest ID naming convention: `tt-0` through `tt-288`
-- Auto-completion logic for dependent quests
-- Responsive canvas-based visualizationwith bezier curves for quest chains
+- Quest dependencies properly mapped, including cross-trader dependencies
+- Trader-specific quest ID naming conventions (`pr-`, `th-`, `sk-`, `pk-`, `mc-`, `rf-`, `jail-`, `rg-`, `lk-`, `bt-`)
+- Auto-completion and prerequisite fill-in logic
+- Mouse wheel zoom and button-based zoom controls
+- Per-trader browsing plus global search across all traders
+- Whitespace-tolerant live search
+- Computed quest level labels and tooltips
+- Responsive canvas-based quest chain visualization with bezier curves
 - LocalStorage persistence for user progress
 
 ---
@@ -96,7 +185,7 @@ Copy index.html.backup-[timestamp] back to index.html
 
 ## Next Steps for Future Enhancements:
 1. Monitor official wiki for new quests in patch updates
-2. Verify exact dependency chains for edge case quests (tt-199, tt-200, tt-201 have complex multi-trader dependencies)
+2. Verify exact dependency chains for edge case quests with unusual cross-trader or circular dependencies
 3. Add quest reward information (currently data structure supports it, content not populated)
 4. Implement quest filtering by difficulty/type
 5. Add quest timeline visualization
