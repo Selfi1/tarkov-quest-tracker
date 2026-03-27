@@ -645,6 +645,14 @@
       quests.forEach((q) => { result[q.id] = levelFor(q.id); });
       return result;
     }
+    function buildGlobalQuestLevelMap() {
+      const levelMap = {};
+      Object.values(FALLBACK_QUESTS_BY_TRADER).forEach((quests) => {
+        const traderLevels = computeQuestLevels(quests);
+        Object.assign(levelMap, traderLevels);
+      });
+      return levelMap;
+    }
     function expandAutoCompletions(sourceId, visited = new Set()) {
       if (visited.has(sourceId)) return [];
       visited.add(sourceId);
@@ -741,21 +749,26 @@
       const canvas = document.getElementById("canvas");
       const edges = document.getElementById("edges");
       const nodes = document.getElementById("nodes");
-      const allQuests = FALLBACK_QUESTS_BY_TRADER[state.activeTrader] || [];
-      const levelByQuestId = computeQuestLevels(allQuests);
       const normalizedQuery = normalizeSearchText(state.searchQuery);
+      const isGlobalSearch = !!normalizedQuery;
+      const allQuests = isGlobalSearch
+        ? Object.entries(FALLBACK_QUESTS_BY_TRADER).flatMap(([traderId, quests]) => quests.map((q) => ({ ...q, traderId })))
+        : (FALLBACK_QUESTS_BY_TRADER[state.activeTrader] || []).map((q) => ({ ...q, traderId: state.activeTrader }));
+      const levelByQuestId = isGlobalSearch
+        ? buildGlobalQuestLevelMap()
+        : computeQuestLevels(FALLBACK_QUESTS_BY_TRADER[state.activeTrader] || []);
       const quests = normalizedQuery
         ? allQuests.filter((q) => normalizeSearchText(q.name).includes(normalizedQuery))
         : allQuests;
       const layout = buildAutoLayout(quests);
-      title.textContent = state.activeTrader;
+      title.textContent = isGlobalSearch ? "Search Results" : state.activeTrader;
       tradersEl.innerHTML = "";
       TRADERS.forEach((trader) => {
         const id = trader.id;
         const traderQuests = FALLBACK_QUESTS_BY_TRADER[id] || [];
         const completed = traderQuests.filter((q) => state.progress[q.id]).length;
         const btn = document.createElement("button");
-        btn.className = "trader" + (id === state.activeTrader ? " active" : "");
+        btn.className = "trader" + (!isGlobalSearch && id === state.activeTrader ? " active" : "");
         btn.innerHTML =
           "<img src='" + trader.img + "' alt='" + id + "' referrerpolicy='no-referrer' crossorigin='anonymous' style='height:76px;width:100%;object-fit:cover;border-radius:8px' />" +
           "<div style='font-weight:700;margin-top:8px'>" + id + "</div>" +
@@ -811,8 +824,9 @@
         btn.style.left = pos.x + "px";
         btn.style.top = pos.y + "px";
         const level = levelByQuestId[quest.id] || 1;
-        btn.title = "Lvl " + level + " req - " + quest.name;
-        btn.textContent = fitText("[Lv " + level + "] " + quest.name);
+        const label = isGlobalSearch ? "[" + quest.traderId + "] [Lv " + level + "] " + quest.name : "[Lv " + level + "] " + quest.name;
+        btn.title = (isGlobalSearch ? quest.traderId + " - " : "") + "Lvl " + level + " req - " + quest.name;
+        btn.textContent = fitText(label);
         btn.onclick = (e) => { e.stopPropagation(); toggleQuest(quest); };
         nodes.appendChild(btn);
       });
