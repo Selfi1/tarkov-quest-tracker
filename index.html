@@ -626,6 +626,9 @@
       const mid = Math.ceil(words.length / 2);
       return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")].join("\n");
     }
+    function normalizeSearchText(text) {
+      return String(text || "").toLowerCase().replace(/\s+/g, " ").trim();
+    }
     function computeQuestLevels(quests) {
       const byId = Object.fromEntries(quests.map((q) => [q.id, q]));
       const levelMemo = {};
@@ -740,7 +743,10 @@
       const nodes = document.getElementById("nodes");
       const allQuests = FALLBACK_QUESTS_BY_TRADER[state.activeTrader] || [];
       const levelByQuestId = computeQuestLevels(allQuests);
-      const quests = state.searchQuery ? allQuests.filter((q) => q.name.toLowerCase().includes(state.searchQuery.toLowerCase())) : allQuests;
+      const normalizedQuery = normalizeSearchText(state.searchQuery);
+      const quests = normalizedQuery
+        ? allQuests.filter((q) => normalizeSearchText(q.name).includes(normalizedQuery))
+        : allQuests;
       const layout = buildAutoLayout(quests);
       title.textContent = state.activeTrader;
       tradersEl.innerHTML = "";
