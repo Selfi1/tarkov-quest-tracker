@@ -28,6 +28,10 @@
     .available { border: 1px solid #f97316; background: rgba(249,115,22,0.2); color: #ffedd5; }
     .locked { border: 1px solid #ef4444; background: rgba(185,28,28,0.2); color: #fee2e2; }
     #fileInput { display: none; }
+    #searchInput { border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: #18181b; color: #fff; padding: 10px 14px; font-size: 14px; width: 250px; }
+    #searchInput::placeholder { color: #a1a1aa; }
+    #searchInput { border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; background: #18181b; color: #fff; padding: 10px 14px; font-size: 14px; width: 250px; }
+    #searchInput::placeholder { color: #a1a1aa; }
   </style>
 </head>
 <body>
@@ -48,7 +52,10 @@
         </div>
       </div>
       <div id="traders" class="traders"></div>
-      <h1 id="title" class="title"></h1>
+      <div class="row" style="margin-top: 16px; margin-bottom: 12px;">
+        <h1 id="title" class="title" style="flex: 1; margin: 0;"></h1>
+        <input id="searchInput" type="text" placeholder="Search quests...">
+      </div>
       <div class="muted">Progress saves automatically in this browser. No install required.</div>
       <div id="view" class="view">
         <div class="canvas" id="canvas">
@@ -594,7 +601,7 @@
     };
 
     const questLookup = Object.fromEntries(Object.values(FALLBACK_QUESTS_BY_TRADER).flat().map((q) => [q.id, q]));
-    const state = { activeTrader: "Prapor", progress: loadProgress(), zoom: 0.75, offset: { x: 0, y: 0 }, dragging: false, dragStart: { x: 0, y: 0 } };
+    const state = { activeTrader: "Prapor", progress: loadProgress(), zoom: 0.75, offset: { x: 0, y: 0 }, dragging: false, dragStart: { x: 0, y: 0 }, searchQuery: "" };
 
     function normalizeProgress(raw) {
       if (!raw || typeof raw !== "object") return {};
@@ -717,7 +724,8 @@
       const canvas = document.getElementById("canvas");
       const edges = document.getElementById("edges");
       const nodes = document.getElementById("nodes");
-      const quests = FALLBACK_QUESTS_BY_TRADER[state.activeTrader] || [];
+      const allQuests = FALLBACK_QUESTS_BY_TRADER[state.activeTrader] || [];
+      const quests = state.searchQuery ? allQuests.filter((q) => q.name.toLowerCase().includes(state.searchQuery.toLowerCase())) : allQuests;
       const layout = buildAutoLayout(quests);
       title.textContent = state.activeTrader;
       tradersEl.innerHTML = "";
@@ -837,6 +845,10 @@
       state.zoom = Math.max(0.35, Math.min(1.35, state.zoom + zoomDelta));
       render();
     }, { passive: false });
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      state.searchQuery = e.target.value;
+      render();
+    });
     render();
   </script>
 </body>
