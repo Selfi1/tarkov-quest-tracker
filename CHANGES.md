@@ -2,6 +2,52 @@
 
 ## Change History
 
+### 2026-03-28
+
+#### Change 13: Corrected Trader Branching and Dependency Chains
+- **Time**: Dependency audit pass
+- **What changed**:
+  - Corrected Therapist branching around `Supply Plans`, `Kind of Sabotage`, and `Dangerous Road`
+  - Fixed Fence, Ref, and Lightkeeper PvP-branch relationships so mutually exclusive outcomes resolve correctly
+  - Extended support for branch-aware quest rules using `requiresAny` and `fails` in the live graph data
+- **Why**: Several trader chains were using stale or overly strict prerequisites, which caused inaccurate unlock states and branch handling
+- **Files modified**: index.html (quest dependency data and progress recomputation)
+
+---
+
+#### Change 14: Completed Ref Quest Audit and Removed Stale References
+- **Time**: Trader verification pass
+- **What changed**:
+  - Added missing Ref quests `rf-17` through `rf-21`
+  - Removed stale `rf-16`
+  - Re-rooted Ref progression so the trader chain no longer contains the previously exposed cycle
+- **Why**: The Ref quest tree was incomplete and contained outdated links that broke graph integrity after the Fence audit surfaced them
+- **Files modified**: index.html (Ref quest data)
+
+---
+
+#### Change 15: Realigned Collector Prerequisites to Live tarkov.dev Data
+- **Time**: Collector source-of-truth refresh
+- **What changed**:
+  - Replaced the local `Collector` prerequisite list with the live tarkov.dev GraphQL `taskRequirements` set
+  - Renamed `pr-12` to `Test Drive - Part 1` and added `pr-62` through `pr-66` for `Test Drive - Part 2` to `Part 6`
+  - Verified the local Collector prerequisite set matches the API 70-for-70 with no missing local quest ids
+- **Why**: The previous local Collector list was outdated and missed current required quests, including the end of the Test Drive chain
+- **Files modified**: index.html (Prapor data, Collector data)
+
+---
+
+#### Change 16: Added Collector Requirement Badge to the UI
+- **Time**: UI update
+- **What changed**:
+  - Added a gold `C` badge to quests required for `Collector`
+  - Added a matching legend entry so the marker is visible without opening tooltips
+  - Connected the badge logic directly to the live `Collector.requires` list instead of a duplicated manual list
+- **Why**: Users need a quick visual way to see which quests matter for unlocking Collector without introducing another full node-state color
+- **Files modified**: index.html (node styling, legend, render logic)
+
+---
+
 ### 2026-03-27
 
 #### Change 1: Added Complete Quest Data
@@ -135,21 +181,21 @@
 
 ---
 
-## Current Quest Tracker Status (as of 2026-03-27)
+## Current Quest Tracker Status (as of 2026-03-28)
 
-### Total Quests: **494** across 11 traders
+### Total Quests: **498** across 11 traders
 
 | Trader | Count | Status |
 |--------|-------|--------|
-| Prapor | 62 | ✅ Expanded |
+| Prapor | 67 | ✅ Expanded |
 | Therapist | 48 | ✅ Expanded |
 | Fence | 15 | ✅ Expanded |
-| Skier | 65 | ✅ Expanded |
+| Skier | 64 | ✅ Expanded |
 | Peacekeeper | 47 | ✅ Expanded |
-| Mechanic | 92 | ✅ Expanded |
-| Ref | 17 | ✅ Added |
-| Jaeger | 64 | ✅ Expanded |
-| Ragman | 54 | ✅ Expanded |
+| Mechanic | 91 | ✅ Expanded |
+| Ref | 21 | ✅ Added |
+| Jaeger | 62 | ✅ Expanded |
+| Ragman | 53 | ✅ Expanded |
 | Lightkeeper | 14 | ✅ Expanded |
 | BTR Driver | 16 | ✅ Expanded |
 
@@ -166,6 +212,8 @@
 - Quest dependencies properly mapped, including cross-trader dependencies
 - Trader-specific quest ID naming conventions (`pr-`, `th-`, `sk-`, `pk-`, `mc-`, `rf-`, `jail-`, `rg-`, `lk-`, `bt-`)
 - Auto-completion and prerequisite fill-in logic
+- Branch-aware prerequisite handling with OR paths and mutually exclusive fail states
+- Collector-required quest badge sourced directly from the live Collector requirement list
 - Mouse wheel zoom and button-based zoom controls
 - Per-trader browsing plus global search across all traders
 - Whitespace-tolerant live search
